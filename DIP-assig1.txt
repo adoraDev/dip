@@ -161,7 +161,7 @@ int main(int argc, char *argv[])
 	int h = image.rows;
 	int w = image.cols;
 	
-	cout << "Usage could not open or read image "<< h << "width" << w << endl;
+	cout << "height "<< h << "width" << w << endl;
 	//cvtColor(image,gr,); //convert the color image to a grayimage data structure
 	gr = image;
 	Mat gr2(h, w, CV_8UC3, Scalar(255));
@@ -198,7 +198,7 @@ int main(int argc, char *argv[])
 			arrr[gr.at<Vec3b>(i, j)[2]] = arrr[gr.at<Vec3b>(i, j)[2]] + 1;
 			arrg_str[gr2.at<Vec3b>(i, j)[1]] = arrg_str[gr2.at<Vec3b>(i, j)[1]] + 1;
 			gr2.at<Vec3b>(i, j)[0] = gr.at<Vec3b>(i, j)[0];
-			gr2.at<Vec3b>(i, j)[1] = gr.at<Vec3b>(i, j)[1];
+			//gr2.at<Vec3b>(i, j)[1] = gr.at<Vec3b>(i, j)[1];
 			gr2.at<Vec3b>(i, j)[2] = gr.at<Vec3b>(i, j)[2];
 		}
 	}
