@@ -1,0 +1,743 @@
+//high/low gray scale image streaching
+#include <iostream>
+#include <opencv2/opencv.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp> 
+using namespace cv;
+using namespace std;
+int main(int argc, char *argv[])
+{
+
+	if (argc != 2)
+	{
+		cout << "Usage could not open or read image " << endl;
+		return -1;
+
+	}
+	Mat image;
+	Mat gr;
+
+	image = imread(argv[1], cv::IMREAD_COLOR);   //read image file
+	if (!image.data)
+	{
+		cout << "Usage could not open or read image " << endl;
+		return -1;
+	}
+	int arr_ori[256] = { 0 };
+	int arr[256] = { 0 }; //assign zero to all
+
+	int h = image.rows;
+	int w = image.cols;
+
+
+	cvtColor(image, gr, COLOR_BGR2GRAY); //convert the color image to a grayimage data structure
+	Mat gr2(h, w, CV_8UC1, Scalar(255));
+
+	for (int i = 0; i<h; i++)
+	{
+		for (int j = 0; j<w; j++)
+		{
+
+			int y = gr.at<uchar>(i, j);
+			if (y < 10)
+			{
+				gr2.at<uchar>(i, j) = uchar(cvRound((double(50) / 10)*y));
+
+			}
+			else if ((y >= 10) && (y < 235))
+			{
+				gr2.at<uchar>(i, j) = uchar(cvRound((double(150) / 225)*(y - 10) + 50));
+			}
+			else if ((y >= 235) && (y < 250))
+			{
+				gr2.at<uchar>(i, j) = uchar(cvRound((double(54) / 15)*(y - 235) + 200));
+			}
+			else
+			{
+				gr2.at<uchar>(i, j) = uchar(cvRound((double(1) / 5)*(y - 250) + 254));
+			}
+
+			/*
+			//low contrast
+			int y = gr.at<uchar>(i, j);
+			if (y < 115)
+			{
+				gr2.at<uchar>(i, j)= uchar(cvRound((double(10) / 115)*y));
+				
+			}
+			else if((y >= 115) && ( y < 220))
+			{
+				gr2.at<uchar>(i, j) = uchar(cvRound((double(235) / 105)*(y-115)+10));
+			}
+			else
+			{
+				gr2.at<uchar>(i, j) = uchar(cvRound((double(10) / 35)*(y-220)+245));
+			}
+			
+			arr[gr2.at<uchar>(i, j)] = arr[gr2.at<uchar>(i, j)] +1;*/
+
+			arr[gr2.at<uchar>(i, j)] = arr[gr2.at<uchar>(i, j)] + 1;
+			arr_ori[y] = arr_ori[y] + 1;
+		}
+	}
+	int max = 0;
+	for (int index = 0; index<256; index++)
+	{
+		cout << "gray value:	 " << index << "  --pixels befor :	 " << arr_ori[index] << "    pixels after :	  " << arr[index] << endl;
+		if (max<arr[index])
+		{
+			max = arr[index];
+		}
+	}
+	cout << max;
+
+	Mat histImage(301, 260, CV_8UC1, Scalar(255));
+	int hist[255];
+	double maxxd = max;
+	for (int i = 0; i<255; i++)
+	{
+		hist[i] = cvRound(double(arr[i] / maxxd) * 300);
+		Point p1 = Point(i, 300 - hist[i]);
+		Point p2 = Point(i, 300);
+		line(histImage, p1, p2, Scalar(0), 1, 8, 0);//draw line on mat structure from p1 to p2 using black-scalar
+	}
+	Mat histImage2(301, 260, CV_8UC1, Scalar(255));
+	int hist2[255];
+	for (int i = 0; i<255; i++)
+	{
+		hist2[i] = cvRound(double(arr_ori[i] / maxxd) * 300);
+		Point p1 = Point(i, 300 - hist2[i]);
+		Point p2 = Point(i, 300);
+		line(histImage2, p1, p2, Scalar(0), 1, 8, 0);//draw line on mat structure from p1 to p2 using black-scalar
+	}
+
+	namedWindow("Low res image", CV_WINDOW_AUTOSIZE); //create window to display
+	namedWindow("Contrast Streched", CV_WINDOW_AUTOSIZE); //create window to display 
+	imshow("Low res image", gr); //show image in it
+	imshow("Contrast Streched", gr2); //show image in it
+	imwrite("CS1.jpg", gr2);
+	namedWindow("histogram-befor", WINDOW_AUTOSIZE);
+	imshow("histogram-befor", histImage2);
+	namedWindow("histogram-after", WINDOW_AUTOSIZE);
+	imshow("histogram-after", histImage);
+	waitKey(0);
+	image.release();
+	histImage.release();
+	return 0;
+}
+
+
+//color image contrast streaching
+#include <iostream>
+#include <opencv2/opencv.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp> 
+using namespace cv;
+using namespace std;
+int main(int argc, char *argv[])
+{  
+	
+	if(argc !=2)
+	{
+		cout << "Usage could not open or read image " << endl ;
+		return -1;
+
+	}
+	Mat image;
+	Mat gr;
+	
+	
+	image = imread(argv[1], cv::IMREAD_COLOR);   //read image file
+	if(!image.data)
+	{
+		cout << "Usage could not open or read image " << endl;
+		return -1;
+	}
+	int arrg_str[256] = { 0 };
+	int arrb[256]={0}; //assign zero to all
+	int arrg[256] = { 0 }; //assign zero to all
+	int arrr[256] = { 0 }; //assign zero to all
+	
+	int h = image.rows;
+	int w = image.cols;
+	
+	cout << "Usage could not open or read image "<< h << "width" << w << endl;
+	//cvtColor(image,gr,); //convert the color image to a grayimage data structure
+	gr = image;
+	Mat gr2(h, w, CV_8UC3, Scalar(255));
+
+	for(int i = 0;i<h;i++)
+	{
+		for(int j = 0;j<w;j++)
+		{
+			
+			int y = gr.at<uchar>(i, j);
+			int b = gr.at<Vec3b>(i, j)[0];
+			int g = gr.at<Vec3b>(i, j)[1];
+			int r = gr.at<Vec3b>(i, j)[2];
+		if (y < 5)
+			{
+				gr2.at<Vec3b>(i, j)[1]= uchar(cvRound((double(10) / 5)*g));
+				
+			}
+			else if((y >= 5) && ( y < 90))
+			{
+				gr2.at<Vec3b>(i, j)[1] = uchar(cvRound((double(20) / 85)*(g-5)+10));
+			}
+			else if((y >= 90) && (y < 245))
+			{
+				gr2.at<Vec3b>(i, j)[1] = uchar(cvRound((double(170) / 155)*(g-90)+30));
+			}
+			else 
+			{
+				gr2.at<Vec3b>(i, j)[1] = uchar(cvRound((double(55) / 10)*(g - 245) + 200));
+			}
+			
+			arrb[gr.at<Vec3b>(i, j)[0]] = arrb[gr.at<Vec3b>(i, j)[0]] +1;
+			arrg[gr.at<Vec3b>(i, j)[1]] = arrg[gr.at<Vec3b>(i, j)[1]] + 1;
+			arrr[gr.at<Vec3b>(i, j)[2]] = arrr[gr.at<Vec3b>(i, j)[2]] + 1;
+			arrg_str[gr2.at<Vec3b>(i, j)[1]] = arrg_str[gr2.at<Vec3b>(i, j)[1]] + 1;
+			gr2.at<Vec3b>(i, j)[0] = gr.at<Vec3b>(i, j)[0];
+			gr2.at<Vec3b>(i, j)[1] = gr.at<Vec3b>(i, j)[1];
+			gr2.at<Vec3b>(i, j)[2] = gr.at<Vec3b>(i, j)[2];
+		}
+	}
+	int maxg = 0;
+	int maxg_str = 0;
+	int maxb = 0;
+	int maxr = 0;
+	for (int index = 0;index<256;index++)
+	{
+		cout << "RED colo value:	 " << index << "  --pixels befor :	 " << arrr[index] << "    pixels after :	  "  << endl;
+		
+		
+		if(maxb<arrb[index])
+		{
+			maxb = arrb[index];
+		}
+	}
+	cout << maxb;
+	
+	Mat histImageBlue(301, 260, CV_8UC1, Scalar(255));
+	int histb[255];
+	double maxxdb = maxb;
+	for(int i=0;i<255;i++)
+	{
+		histb[i] = cvRound(double(arrb[i]/maxxdb)*300);
+		Point p1 = Point(i,300-histb[i]);
+		Point p2 = Point(i,300);
+		line(histImageBlue,p1,p2,Scalar(0),1,8,0);//draw line on mat structure from p1 to p2 using black-scalar
+	}
+	for (int index = 0; index<256; index++)
+	{
+		cout << "GREEN colo value:	 " << index << "  --pixels befor :	 " << arrg[index] << "    pixels after :	" << arrg_str[index]   << endl;
+		if (maxg<arrg[index])
+		{
+			maxg = arrg[index];
+		}
+		if (maxg_str<arrg_str[index])
+		{
+			maxg_str = arrg_str[index];
+		}
+	}
+	cout << maxg;
+	cout << maxg_str;
+
+	Mat histImageGreen(301, 260, CV_8UC1, Scalar(255));
+	int histg[255];
+	double maxxdg = maxg;
+	for (int i = 0; i<255; i++)
+	{
+		histg[i] = cvRound(double(arrg[i] / maxxdg) * 300);
+		Point p1 = Point(i, 300 - histg[i]);
+		Point p2 = Point(i, 300);
+		line(histImageGreen, p1, p2, Scalar(0), 1, 8, 0);//draw line on mat structure from p1 to p2 using black-scalar
+	}
+	Mat histImageGreen_str(301, 260, CV_8UC1, Scalar(255));
+	int histg_str[255];
+	double maxxdg_str = maxg_str;
+	for (int i = 0; i<255; i++)
+	{
+		histg_str[i] = cvRound(double(arrg_str[i] / maxxdg_str) * 300);
+		Point p1 = Point(i, 300 - histg_str[i]);
+		Point p2 = Point(i, 300);
+		line(histImageGreen_str, p1, p2, Scalar(0), 1, 8, 0);//draw line on mat structure from p1 to p2 using black-scalar
+	}
+	for (int index = 0; index<256; index++)
+	{
+		cout << "BLUE colo value:	 " << index << "  --pixels befor :	 " << arrb[index] << "    pixels after :	  " << endl;
+		if (maxr<arrr[index])
+		{
+			maxr = arrr[index];
+		}
+	}
+	cout << maxr;
+
+	Mat histImageRed(301, 260, CV_8UC1, Scalar(255));
+	int histr[255];
+	double maxxdr = maxr;
+	for (int i = 0; i<255; i++)
+	{
+		histr[i] = cvRound(double(arrr[i] / maxxdr) * 300);
+		Point p1 = Point(i, 300 - histr[i]);
+		Point p2 = Point(i, 300);
+		line(histImageRed, p1, p2, Scalar(0), 1, 8, 0);//draw line on mat structure from p1 to p2 using black-scalar
+	}
+
+	namedWindow("Low res image", CV_WINDOW_AUTOSIZE); //create window to display
+	namedWindow("Contrast Streched", CV_WINDOW_AUTOSIZE); //create window to display 
+	imshow("Low res image", gr); //show image in it
+	imshow("Contrast Streched", gr2); //show image in it
+	namedWindow("histogram-RED", WINDOW_AUTOSIZE);
+	imshow("histogram-RED", histImageRed);
+	namedWindow("histogram-GREEN", WINDOW_AUTOSIZE);
+	imshow("histogram-GREEN", histImageGreen);
+	namedWindow("histogram-GREEN_str", WINDOW_AUTOSIZE);
+	imshow("histogram-GREEN_str", histImageGreen_str);
+	namedWindow("histogram-BLUE", WINDOW_AUTOSIZE);
+	imshow("histogram-BLUE", histImageBlue);
+	waitKey(0);
+	image.release(); 
+	//histImage.release();
+	return 0;
+}
+
+//make pixel black from mat data srtucture
+#include <iostream>
+#include <opencv2/opencv.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+using namespace cv;
+using namespace std;
+int main(int argc, char *argv[])
+{
+
+if (argc != 2)
+{
+cout << "Usage could not open or read image " << endl;
+return -1;
+
+}
+Mat image;
+Mat gr;
+image = imread(argv[1], cv::IMREAD_COLOR);   //read image file
+if (!image.data)
+{
+cout << "Usage could not open or read image " << endl;
+return -1;
+}
+
+int h = image.rows;
+int w = image.cols;
+int b = image.at<Vec3b>(30, 40)[0];//get blue color data of a pixes in a vector i,j location
+
+cvtColor(image, gr, COLOR_BGR2GRAY); //convert the color image to a grayimage data structure
+
+cout << "height :" << h << endl;
+cout << "width :" << w << endl;
+cout << "blue :" << b << endl;
+
+image.at<Vec3b>(30, 40)[0] = 255;  //set blue channel of a pixel to 255
+image.at<Vec3b>(30, 40)[1] = 255;//set green channel of a pixel to 255
+image.at<Vec3b>(30, 40)[2] = 255;//set red channel of a pixel to 255
+
+namedWindow("Display window", CV_WINDOW_AUTOSIZE); //create window to display
+imshow("Display window", image); //show image in it
+waitKey(0);
+image.release();
+return 0;
+}
+
+
+
+//create r g b separately in single channel ipl structures
+
+#include "iostream"
+#include <opencv2/opencv.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp> 
+int main(int argc, char *argv[])
+{                               //pass cmd argument number 1
+	IplImage* img = cvLoadImage(argv[1], CV_LOAD_IMAGE_UNCHANGED);//load image to ipl data structure
+	if (!img)
+	{
+		printf("Error: Couldn't open the image file.\n");//if the image cannot be loaded return error
+		return 1;
+	}
+
+
+
+	int ch2 = img->nChannels;//number of color channels
+	int h2 = img->height;
+	int w2 = img->width;
+	int step2 = img->widthStep;
+
+	uchar* data2 = (uchar *)img->imageData;
+
+	IplImage* red = cvCreateImage(cvSize(w2, h2), IPL_DEPTH_8U, 1);//new area
+	IplImage* green = cvCreateImage(cvSize(w2, h2), IPL_DEPTH_8U, 1);//new area
+	IplImage* blue = cvCreateImage(cvSize(w2, h2), IPL_DEPTH_8U, 1);//new area
+
+	int ch = red->nChannels;//number of color channels
+	int h = red->height;
+	int w = red->width;
+	int step = red->widthStep;
+
+	uchar* redData = (uchar *)red->imageData;
+	uchar* greenData = (uchar *)green->imageData;
+	uchar* blueData = (uchar *)blue->imageData;
+
+	//fing the bgr value of pixe 10,20
+	int row = 0; //i  //(row,coll)
+	int col = 0; //j
+
+
+	for (row = 0; row < h2; row++) {
+		for (col = 0; col < w2; col++) {
+
+			int a = (ch2*col + step2*row);//old image
+			int b = ((col)+step*(row));//new area
+			redData[b] = data2[a];
+			greenData[b] = data2[a + 1];
+			blueData[b] = data2[a + 1];
+		}
+	}
+
+
+
+
+
+	printf("channels %d \n", ch);
+	printf("height  %d \n", h);
+	printf("widthe %d \n", w);
+	printf("width  %d \n", step);
+
+	printf("channels of second image %d \n", ch2);
+	printf("height of second image %d \n", h2);
+	printf("width of second image %d \n", w2);
+	printf("width step second image %d \n", step2);
+
+
+
+
+	cvNamedWindow("Image:", CV_WINDOW_AUTOSIZE);//create a image container(window with name) to load image ,put to a auto size window
+	cvShowImage("Image:", img);//show image in ipl data struc
+
+
+	cvNamedWindow("red:");//create a image container(window with name) to load image ,put to a auto size window
+	cvShowImage("red:", red);//show image in ipl data struc
+	cvNamedWindow("green:");//create a image container(window with name) to load image ,put to a auto size window
+	cvShowImage("green:", green);//show image in ipl data struc
+	cvNamedWindow("blue:");//create a image container(window with name) to load image ,put to a auto size window
+	cvShowImage("blue:", blue);//show image in ipl data struc
+
+	cvWaitKey(0);//display the window and hold it till a key is pressed..in 0 mili seconds it will go
+	cvDestroyWindow("Image");//distroy the window
+	cvReleaseImage(&img);//clean the memory and clean it since no garbade cleaner in c,c++
+	cvWaitKey(0);//display the window and hold it till a key is pressed..in 0 mili seconds it will go
+	cvDestroyWindow("red");//distroy the window
+	cvReleaseImage(&red);//clean the memory and clean it since no garbade cleaner in c,c++
+	cvWaitKey(0);//display the window and hold it till a key is pressed..in 0 mili seconds it will go
+	cvDestroyWindow("green");//distroy the window
+	cvReleaseImage(&green);//clean the memory and clean it since no garbade cleaner in c,c++
+	cvWaitKey(0);//display the window and hold it till a key is pressed..in 0 mili seconds it will go
+	cvDestroyWindow("blue");//distroy the window
+	cvReleaseImage(&blue);//clean the memory and clean it since no garbade cleaner in c,c++
+	return 0;
+}
+
+
+//rgb separaetly from ipl data structure
+#include "iostream"
+#include <opencv2/opencv.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp> 
+int main(int argc, char *argv[])
+{                               //pass cmd argument number 1
+	IplImage* img = cvLoadImage(argv[1], CV_LOAD_IMAGE_UNCHANGED);//load image to ipl data structure
+	if (!img)
+	{
+		printf("Error: Couldn't open the image file.\n");//if the image cannot be loaded return error
+		return 1;
+	}
+
+
+
+	int ch2 = img->nChannels;//number of color channels
+	int h2 = img->height;
+	int w2 = img->width;
+	int step2 = img->widthStep;
+
+	uchar* data2 = (uchar *)img->imageData;
+
+	IplImage* red = cvCreateImage(cvSize(w2, h2), IPL_DEPTH_8U, 3);//new area
+	IplImage* green = cvCreateImage(cvSize(w2, h2), IPL_DEPTH_8U, 3);//new area
+	IplImage* blue = cvCreateImage(cvSize(w2, h2), IPL_DEPTH_8U, 3);//new area
+																	//IplImage* gray = cvCreateImage(cvSize(w2, h2), IPL_DEPTH_8U, 1);//new area
+
+	int ch = red->nChannels;//number of color channels
+	int h = red->height;
+	int w = red->width;
+	int step = red->widthStep;
+
+	uchar* redData = (uchar *)red->imageData;
+	uchar* greenData = (uchar *)green->imageData;
+	uchar* blueData = (uchar *)blue->imageData;
+	//uchar* grayData = (uchar *)gray->imageData;
+
+	//fing the bgr value of pixe 10,20
+	int row = 0; //i  //(row,coll)
+	int col = 0; //j
+
+
+	for (row = 0; row < h2; row++) {
+		for (col = 0; col < w2; col++) {
+
+			int a = (ch2*col + step2*row);//old image
+			int b = (ch*(col)+step*(row));//new area
+			redData[b] = data2[a];
+			redData[b + 1] = 0;
+			redData[b + 2] = 0;
+			greenData[b] = 0;
+			greenData[b + 1] = data2[a + 1];
+			greenData[b + 2] = 0;
+			blueData[b] = 0;
+			blueData[b + 1] = 0;
+			blueData[b + 2] = data2[a + 2];
+			//grayData[b] = data2[a] * 0.299 + data2[a + 1] * 0.587 + data2[a + 2] * 0.114;
+		}
+	}
+
+
+
+
+
+	printf("channels %d \n", ch);
+	printf("height  %d \n", h);
+	printf("widthe %d \n", w);
+	printf("width  %d \n", step);
+
+	printf("channels of second image %d \n", ch2);
+	printf("height of second image %d \n", h2);
+	printf("width of second image %d \n", w2);
+	printf("width step second image %d \n", step2);
+
+
+
+
+	cvNamedWindow("Image:", CV_WINDOW_AUTOSIZE);//create a image container(window with name) to load image ,put to a auto size window
+	cvShowImage("Image:", img);//show image in ipl data struc
+
+
+	cvNamedWindow("red:");//create a image container(window with name) to load image ,put to a auto size window
+	cvShowImage("red:", red);//show image in ipl data struc
+	cvNamedWindow("green:");//create a image container(window with name) to load image ,put to a auto size window
+	cvShowImage("green:", green);//show image in ipl data struc
+	cvNamedWindow("blue:");//create a image container(window with name) to load image ,put to a auto size window
+	cvShowImage("blue:", blue);//show image in ipl data struc
+							   //cvNamedWindow("gray:");//create a image container(window with name) to load image ,put to a auto size window
+							   //cvShowImage("gray:", gray);//show image in ipl data struc
+
+	cvWaitKey(0);//display the window and hold it till a key is pressed..in 0 mili seconds it will go
+	cvDestroyWindow("Image");//distroy the window
+	cvReleaseImage(&img);//clean the memory and clean it since no garbade cleaner in c,c++
+	cvWaitKey(0);//display the window and hold it till a key is pressed..in 0 mili seconds it will go
+	cvDestroyWindow("red");//distroy the window
+	cvReleaseImage(&red);//clean the memory and clean it since no garbade cleaner in c,c++
+	cvWaitKey(0);//display the window and hold it till a key is pressed..in 0 mili seconds it will go
+	cvDestroyWindow("green");//distroy the window
+	cvReleaseImage(&green);//clean the memory and clean it since no garbade cleaner in c,c++
+	cvWaitKey(0);//display the window and hold it till a key is pressed..in 0 mili seconds it will go
+	cvDestroyWindow("blue");//distroy the window
+	cvReleaseImage(&blue);//clean the memory and clean it since no garbade cleaner in c,c++
+						  //cvDestroyWindow("gray");//distroy the window
+						  //cvReleaseImage(&gray);//clean the memory and clean it since no garbade cleaner in c,c++
+	return 0;
+}
+
+
+//gray scale and inverse image in ipl data structure
+#include "iostream"
+#include <opencv2/opencv.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+int main(int argc, char *argv[])
+{                               //pass cmd argument number 1
+IplImage* img = cvLoadImage(argv[1], CV_LOAD_IMAGE_UNCHANGED);//load image to ipl data structure
+if (!img)
+{
+printf("Error: Couldn't open the image file.\n");//if the image cannot be loaded return error
+return 1;
+}
+
+
+
+int ch2 = img->nChannels;//number of color channels
+int h2 = img->height;
+int w2 = img->width;
+int step2 = img->widthStep;
+
+uchar* data2 = (uchar *)img->imageData;
+
+IplImage* red = cvCreateImage(cvSize(w2, h2), IPL_DEPTH_8U, 1);//new area
+IplImage* green = cvCreateImage(cvSize(w2, h2), IPL_DEPTH_8U, 1);//new area
+IplImage* blue = cvCreateImage(cvSize(w2, h2), IPL_DEPTH_8U, 1);//new area
+IplImage* gray = cvCreateImage(cvSize(w2, h2), IPL_DEPTH_8U, 1);//new area
+IplImage* inv = cvCreateImage(cvSize(w2, h2), IPL_DEPTH_8U, 3);//new area
+
+int ch = red->nChannels;//number of color channels
+int h = red->height;
+int w = red->width;
+int step = red->widthStep;
+
+uchar* redData = (uchar *)red->imageData;
+uchar* greenData = (uchar *)green->imageData;
+uchar* blueData = (uchar *)blue->imageData;
+uchar* grayData = (uchar *)gray->imageData;
+uchar* invData = (uchar *)inv->imageData;
+
+//fing the bgr value of pixe 10,20
+int row = 0; //i  //(row,coll)
+int col = 0; //j
+
+
+for (row =0;row < h2;row++) {
+for (col =0;col < w2;col++) {
+
+int a = (ch2*col + step2*row);//old image
+int b = ((col) + step*(row));//new area
+redData[b] = data2[a+2];
+greenData[b] = data2[a +1] ;
+blueData[b] = data2[a] ;
+//gray scale image
+grayData[b] = data2[a+2] * 0.299 + data2[a + 1] * 0.587 + data2[a] * 0.114;  // pixels are in bgr format
+//color inverse image
+invData[a] = 255-data2[a];
+invData[a+1] = 255 - data2[a+1];
+invData[a+2] = 255 - data2[a+2];
+
+}
+}
+
+printf("channels %d \n", ch);
+printf("height  %d \n", h);
+printf("widthe %d \n", w);
+printf("width  %d \n", step);
+
+printf("channels of second image %d \n",ch2);
+printf("height of second image %d \n", h2);
+printf("width of second image %d \n", w2);
+printf("width step second image %d \n", step2);
+
+cvNamedWindow("Image:", CV_WINDOW_AUTOSIZE);//create a image container(window with name) to load image ,put to a auto size window
+cvShowImage("Image:", img);//show image in ipl data struc
+cvNamedWindow("red:");//create a image container(window with name) to load image ,put to a auto size window
+cvShowImage("red:", red);//show image in ipl data struc
+cvNamedWindow("green:");//create a image container(window with name) to load image ,put to a auto size window
+cvShowImage("green:", green);//show image in ipl data struc
+cvNamedWindow("blue:");//create a image container(window with name) to load image ,put to a auto size window
+cvShowImage("blue:", blue);//show image in ipl data struc
+cvNamedWindow("gray:");//create a image container(window with name) to load image ,put to a auto size window
+cvShowImage("gray:", gray);//show image in ipl data struc
+cvNamedWindow("inv:");//create a image container(window with name) to load image ,put to a auto size window
+cvShowImage("inv:", inv);//show image in ipl data struc
+cvWaitKey(0);//display the window and hold it till a key is pressed..in 0 mili seconds it will go
+cvDestroyWindow("Image");//distroy the window
+cvReleaseImage(&img);//clean the memory and clean it since no garbade cleaner in c,c++
+cvWaitKey(0);//display the window and hold it till a key is pressed..in 0 mili seconds it will go
+cvDestroyWindow("red");//distroy the window
+cvReleaseImage(&red);//clean the memory and clean it since no garbade cleaner in c,c++
+cvWaitKey(0);//display the window and hold it till a key is pressed..in 0 mili seconds it will go
+cvDestroyWindow("green");//distroy the window
+cvReleaseImage(&green);//clean the memory and clean it since no garbade cleaner in c,c++
+cvWaitKey(0);//display the window and hold it till a key is pressed..in 0 mili seconds it will go
+cvDestroyWindow("blue");//distroy the window
+cvReleaseImage(&blue);//clean the memory and clean it since no garbade cleaner in c,c++
+cvWaitKey(0);//display the window and hold it till a key is pressed..in 0 mili seconds it will go
+cvDestroyWindow("gray");//distroy the window
+cvReleaseImage(&gray);//clean the memory and clean it since no garbade cleaner in c,c++
+cvWaitKey(0);//display the window and hold it till a key is pressed..in 0 mili seconds it will go
+cvDestroyWindow("inv");//distroy the window
+cvReleaseImage(&inv);//clean the memory and clean it since no garbade cleaner in c,c++
+return 0;
+}
+
+
+
+
+//copy part of one image to another blank image
+#include "iostream"
+#include <opencv2/opencv.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+int main(int argc, char *argv[])
+{                               //pass cmd argument number 1
+IplImage* img = cvLoadImage(argv[1], CV_LOAD_IMAGE_UNCHANGED);//load image to ipl data structure
+if (!img)
+{
+printf("Error: Couldn't open the image file.\n");//if the image cannot be loaded return error
+return 1;
+}
+
+//IplImage* cp = cvCreateImage(cvSize(100, 100),IPL_DEPTH_8U,3);//new area
+IplImage* cp = cvLoadImage(argv[2], CV_LOAD_IMAGE_UNCHANGED);//load image to ipl data structure
+int ch = cp->nChannels;//number of color channels
+int h = cp->height;
+int w = cp->width;
+int step = cp->widthStep;
+
+uchar* data = (uchar *)cp->imageData;
+
+int ch2 = img->nChannels;//number of color channels
+int h2 = img->height;
+int w2 = img->width;
+int step2 = img->widthStep;
+
+uchar* data2 = (uchar *)img->imageData;
+
+//fing the bgr value of pixe 10,20
+int row = 0; //i  //(row,coll)
+int col = 0; //j
+
+
+for (row =100;row < 200;row++) {
+for (col =100;col < 200;col++) {
+
+int a = (ch2*col + step2*row);//old image
+int b = (ch*(col) + step*(row));//new area
+data[b] = data2[a];
+data[b + 1] = data2[a + 1];
+data[b + 2] = data2[a + 2];
+}
+}
+
+printf("channels %d \n", ch);
+printf("height  %d \n", h);
+printf("widthe %d \n", w);
+printf("width  %d \n", step);
+
+printf("channels of second image %d \n", ch2);
+printf("height of second image %d \n", h2);
+printf("width of second image %d \n", w2);
+printf("width step second image %d \n", step2);
+
+
+
+
+cvNamedWindow("Image:", CV_WINDOW_AUTOSIZE);//create a image container(window with name) to load image ,put to a auto size window
+cvShowImage("Image:", img);//show image in ipl data struc
+
+
+cvNamedWindow("Image2:");//create a image container(window with name) to load image ,put to a auto size window
+cvShowImage("Image2:", cp);//show image in ipl data struc
+
+cvWaitKey(0);//display the window and hold it till a key is pressed..in 0 mili seconds it will go
+cvDestroyWindow("Image");//distroy the window
+cvReleaseImage(&img);//clean the memory and clean it since no garbade cleaner in c,c++
+cvWaitKey(0);//display the window and hold it till a key is pressed..in 0 mili seconds it will go
+cvDestroyWindow("Image2");//distroy the window
+cvReleaseImage(&cp);//clean the memory and clean it since no garbade cleaner in c,c++
+return 0;
+}
+
+
